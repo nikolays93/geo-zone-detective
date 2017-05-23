@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: GEO PLUGIN
+Plugin Name: Geo Zone Detective
 Plugin URI: 
-Description: 
-Version: 1.1b
+Description: Created special for you company
+Version: 0.1a
 Author: NikolayS93
 Author URI: https://vk.com/nikolays_93
 Author EMAIL: nikolayS93@ya.ru
@@ -22,21 +22,6 @@ define('GEO_DEFAULT_CHARSET', apply_filters( 'GEO_DEFAULT_CHARSET', 'utf-8' ));
 define('GEO_COUNTRIES_FILE', GEO_PLUG_DIR . 'inc/geo_files/countries.txt');
 define('GEO_CITIES_FILE', GEO_PLUG_DIR . 'inc/geo_files/cities.txt');
 
-register_activation_hook(__FILE__, function(){
-    $geo_target = new \Geo( array(
-      'charset' => GEO_DEFAULT_CHARSET,
-    ) );
-    $value = $geo_target->get_value();
-    $default = array(
-      'charset'  => GEO_DEFAULT_CHARSET,
-      'country'  => $value['country'],
-      'city'     => $value['city'],
-      'region'   => $value['region'],
-      'district' => $value['district'],
-      );
-    add_option( GEO_OPTION, $default );
-});
-
 require_once GEO_PLUG_DIR . 'inc/class-geo.php';
 
 if(is_admin()){
@@ -46,36 +31,50 @@ if(is_admin()){
   $page = new WPAdminPageRender( GEO_OPTION,
   array(
     'parent' => 'options-general.php',
-    'title' => __('Test New Plugin'),
-    'menu' => __('New Plug Page'),
+    'title' => __('Определение ГЕО-Локации по IP адресу'),
+    'menu' => __('Geo Zone Detective'),
     ),
   'GEO_ZONE\geo_zone_render_page'
   );
 }
 
-global $geo_target;
+function get_geo_value( $value = false ){
+  $options = get_option(GEO_OPTION);
 
-$geo_target = new \Geo( array(
-  'ip' => '178.204.102.30', // г. Казань
-  'charset' => 'utf-8', // default
-) );
+  $geo_target = new \Geo( array(
+    'ip'      => !empty($options['test-ip']) ? $options['test-ip'] : null,
+    'charset' => !empty($options['charset']) ? $options['charset'] : null,
+  ) );
 
-function get_city(){
-  global $geo_target;
-  return $geo_target->get_value('city');
+  $return = $geo_target->get_value();
+
+  if( $value ){
+    if(empty($return[$value]))
+      return $options[$value];
+
+    return $return[$value];
+  }
+
+  return !empty($return) ? $return : $options;
 }
-function get_country(){
-  global $geo_target;
-  return $geo_target->get_value('country');
-}
-function get_region(){
-  global $geo_target;
-  return $geo_target->get_value('region');
-}
-function get_district(){
-  global $geo_target;
-  return $geo_target->get_value('district');
-}
+
+register_activation_hook(__FILE__, function(){
+    $geo_value = get_geo_value();
+
+    $default = array(
+      'charset'  => GEO_DEFAULT_CHARSET,
+      'country'  => isset($geo_value['country']) ? $geo_value['country'] : '',
+      'city'     => isset($geo_value['city']) ? $geo_value['city'] : '',
+      'region'   => isset($geo_value['region']) ? $geo_value['region'] : '',
+      'district' => isset($geo_value['district']) ? $geo_value['district'] : '',
+      );
+    add_option( GEO_OPTION, $default );
+});
+
+function get_city(){ return get_geo_value( 'city' ); }
+function get_country(){ return get_geo_value( 'country' ); }
+function get_region(){ return get_geo_value( 'region' ); }
+function get_district(){ return get_geo_value( 'district' ); }
 
 /**
  * Admin Page
@@ -117,22 +116,26 @@ function geo_zone_render_page(){
       'type'        => 'text',
       'label'       => 'Fake IP for debug',
       'desc'        => '',
-      'placeholder' => '178.204.102.30',
       ),
     );
 
+  /**
+   * @todo:
+   * echo '<input type="button" id="clear_geo_cache" class="button" value="Очистить Гео Кэш">';
+   */
   WPForm::render(
-    apply_filters( 'GEO_ZONE\dt_admin_options', $data ),
+    $data,
     WPForm::active(GEO_OPTION, false, true),
     true,
-    array('clear_value' => false)
+    array(
+      'clear_value' => false,
+      'admin_page' => true,
+      )
     );
 
 /**
  *  $geo_target->get_value() has inetnum, country, city, region, district, lat, lng
  */
-
-  var_dump( get_city() );
 
   submit_button();
 }

@@ -1,5 +1,7 @@
 <?php
 
+// Клас является форком http://faniska.ru/php-kusochki/geotargeting-novyj-php-klass-dlya-raboty-s-bazoj-ipgeobase-ru.html
+
 class Geo {
 
     public $ip;

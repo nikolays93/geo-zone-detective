@@ -1,57 +1,26 @@
 <?php
-
 /**
  * Class Name: WPForm ( :: render )
  * Class URI: https://github.com/nikolays93/WPForm
  * Description: render forms as wordpress fields
- * Version: 1.2
+ * Version: 1.3
  * Author: NikolayS93
  * Author URI: https://vk.com/nikolays_93
  * License: GNU General Public License v2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  */
+namespace GEO_ZONE;
+
 if ( ! defined( 'ABSPATH' ) )
   exit; // disable direct access
 
-if( class_exists('WPForm') && apply_filters( 'WPFormVer', '1.2' ) === false )
-  return;
-
 function _isset_default(&$var, $default, $unset = false){
   $result = $var = isset($var) ? $var : $default;
-  if($unset)
-    $var = FALSE;
+  if($unset) $var = FALSE;
   return $result;
 }
 function _isset_false(&$var, $unset = false){ return _isset_default( $var, false, $unset ); }
 function _isset_empty(&$var, $unset = false){ return _isset_default( $var, '', $unset ); }
-
-/**
- * change names for wordpress options
- * @param  array  $inputs      rendered inputs
- * @param  string $option_name name of wordpress option ( @see get_option() )
- * @return array               filtred inputs
- */
-add_filter( 'dt_admin_options', 'admin_page_options_filter', 10, 2 );
-function admin_page_options_filter( $inputs, $option_name = false ){
-  if( ! $option_name )
-    $option_name = _isset_false($_GET['page']);
-
-  if( ! $option_name )
-    return $inputs;
-
-  if( isset($inputs['id']) )
-    $inputs = array($inputs);
-
-  foreach ( $inputs as &$input ) {
-    if( isset($input['name']) )
-      $input['name'] = "{$option_name}[{$input['name']}]";
-    else
-      $input['name'] = "{$option_name}[{$input['id']}]";
-    
-    $input['check_active'] = 'id';
-  }
-  return $inputs;
-}
 
 class WPForm {
   static protected $clear_value;
@@ -123,6 +92,57 @@ class WPForm {
     return $active;
   }
 
+  // * EXPEREMENTAL!
+  protected static function set_defaults( $args, $is_table ){
+    $default_args = array(
+      'admin_page'  => false, // set true for auto detect
+      'item_wrap'   => array('<p>', '</p>'),
+      'form_wrap'   => array('<table class="table form-table"><tbody>', '</tbody></table>'),
+      'label_tag'   => 'th',
+      'hide_desc'   => false,
+      'clear_value' => 'false'
+      );
+    $args = array_merge($default_args, $args);
+
+    self::$clear_value = $args['clear_value'];
+
+    if( $args['item_wrap'] === false )
+      $args['item_wrap'] = array('', '');
+
+    if($args['form_wrap'] === false)
+      $args['form_wrap'] = array('', '');
+
+    if( $args['label_tag'] == 'th' && $is_table == false )
+      $args['label_tag'] = 'label';
+
+    return $args;
+  }
+
+  /**
+   * EXPEREMENTAL!
+   * change names for wordpress options
+   * @param  array  $inputs      rendered inputs
+   * @param  string $option_name name of wordpress option ( @see get_option() )
+   * @return array               filtred inputs
+   */
+  protected static function admin_page_options( $inputs, $option_name = false ){
+    if( ! is_string( $option_name ) && !empty($_GET['page']) )
+      $option_name = $_GET['page'];
+
+    if( ! $option_name )
+      return $inputs;
+
+    foreach ( $inputs as &$input ) {
+      if( isset($input['name']) )
+        $input['name'] = "{$option_name}[{$input['name']}]";
+      else
+        $input['name'] = "{$option_name}[{$input['id']}]";
+
+      $input['check_active'] = 'id';
+    }
+    return $inputs;
+  }
+
   /**
    * Render form items
    * @param  boolean $render_data array with items ( id, name, type, options..)
@@ -143,7 +163,7 @@ class WPForm {
 
     if( empty($render_data) ){
       if( function_exists('is_wp_debug') && is_wp_debug() )
-        echo '<pre> Файл настроек не найден </pre>';
+        echo '<pre> Параметры формы не были переданы </pre>';
       return false;
     }
     
@@ -153,24 +173,10 @@ class WPForm {
     if($active === false)
       $active = array();
     
-    $default_args = array(
-      'item_wrap' => array('<p>', '</p>'),
-      'form_wrap' => array('<table class="table form-table"><tbody>', '</tbody></table>'),
-      'label_tag' => 'th',
-      'hide_desc' => false,
-      'clear_value' => 'false'
-      );
-    $args = array_merge($default_args, $args);
-    self::$clear_value = $args['clear_value'];
-    if( $args['item_wrap'] === false )
-      $args['item_wrap'] = array('', '');
+    $args = self::set_defaults( $args, $is_table );
+    if( $args['admin_page'] )
+      $render_data = self::admin_page_options( $render_data, $args['admin_page'] );
 
-    if($args['form_wrap'] === false)
-      $args['form_wrap'] = array('', '');
-
-    if( $args['label_tag'] == 'th' && $is_table == false ){
-      $args['label_tag'] = 'label';
-    }
     /**
      * Template start
      */

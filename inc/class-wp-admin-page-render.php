@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Class Name: WPAdminPageRender
  * Class URI: https://github.com/nikolays93/classes.git
@@ -10,12 +9,10 @@
  * License: GNU General Public License v2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  */
+namespace GEO_ZONE;
 
 if ( ! defined( 'ABSPATH' ) )
   exit; // disable direct access
-
-if( class_exists('WPAdminPageRender') && apply_filters( 'WPAdminPageRenderVer', '1.1' ) === false )
-	return;
 
 class WPAdminPageRender {
 	public $page = '';
@@ -25,7 +22,7 @@ class WPAdminPageRender {
 	protected $args = array(
 		'parent'      => 'options-general.php',
 		'title'       => '',
-		'menu'        => __('New page'),
+		'menu'        => 'New page',
 		'permissions' => 'manage_options',
 		);
 	protected $page_content_cb = '';
