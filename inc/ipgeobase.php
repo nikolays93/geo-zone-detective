@@ -112,7 +112,6 @@ class IPGeoBase
 	 *                         string - если указан ключ, выдаст значение ключа масива
 	 */
 	public function getRecord($key = false, $cookie = true ){
-		var_dump($this->ip);
 		// Если ключ указан и его не существует, вернет false
 		$key_array = array('range', 'country', 'city', 'region', 'district', 'lat', 'lng');
 		if ( $key && ! in_array($key, $key_array) )
