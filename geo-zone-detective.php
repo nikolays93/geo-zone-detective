@@ -19,10 +19,10 @@ define('GEO_OPTION', 'geo-zone');
 define('GEO_PLUG_DIR', plugin_dir_path( __FILE__ ));
 
 define('GEO_DEFAULT_CHARSET', apply_filters( 'GEO_DEFAULT_CHARSET', 'utf-8' ));
-define('GEO_COUNTRIES_FILE', GEO_PLUG_DIR . 'inc/geo_files/countries.txt');
-define('GEO_CITIES_FILE', GEO_PLUG_DIR . 'inc/geo_files/cities.txt');
 
-require_once GEO_PLUG_DIR . 'inc/class-geo.php';
+define('GEO_LISTS_DIR', GEO_PLUG_DIR . 'inc/geo_files/');
+
+require_once GEO_PLUG_DIR . 'inc/ipgeobase.php';
 
 if(is_admin()){
   require_once GEO_PLUG_DIR . 'inc/class-wp-admin-page-render.php';
@@ -38,24 +38,13 @@ if(is_admin()){
   );
 }
 
-function get_geo_value( $value = false ){
+function get_geo_value( $key_data = false ){
   $options = get_option(GEO_OPTION);
 
-  $geo_target = new \Geo( array(
-    'ip'      => !empty($options['test-ip']) ? $options['test-ip'] : null,
-    'charset' => !empty($options['charset']) ? $options['charset'] : null,
-  ) );
+  $check_ip = !empty($options['test-ip']) ? $options['test-ip'] : null;
+  $geo_target = new \IPGeoBase( $check_ip );
 
-  $return = $geo_target->get_value();
-
-  if( $value ){
-    if(empty($return[$value]))
-      return $options[$value];
-
-    return $return[$value];
-  }
-
-  return !empty($return) ? $return : $options;
+  return $geo_target->getRecord( $key_data );
 }
 
 register_activation_hook(__FILE__, function(){
@@ -71,11 +60,6 @@ register_activation_hook(__FILE__, function(){
     add_option( GEO_OPTION, $default );
 });
 
-function get_city(){ return get_geo_value( 'city' ); }
-function get_country(){ return get_geo_value( 'country' ); }
-function get_region(){ return get_geo_value( 'region' ); }
-function get_district(){ return get_geo_value( 'district' ); }
-
 /**
  * Admin Page
  */
@@ -84,44 +68,44 @@ function geo_zone_render_page(){
     array(
       'id'      => 'charset',
       'type'    => 'text',
-      'label'   => 'Charset',
+      'label'   => __('Charset'),
       'desc'    => '',
       ),
     array(
       'id'      => 'country',
       'type'    => 'text',
-      'label'   => 'Default Country',
+      'label'   => __('Default Country'),
       'desc'    => '',
       ),
     array(
       'id'      => 'city',
       'type'    => 'text',
-      'label'   => 'Default City',
+      'label'   => __('Default City'),
       'desc'    => '',
       ),
     array(
       'id'      => 'region',
       'type'    => 'text',
-      'label'   => 'Default Region',
+      'label'   => __('Default Region'),
       'desc'    => '',
       ),
     array(
       'id'      => 'district',
       'type'    => 'text',
-      'label'   => 'Default District',
+      'label'   => __('Default District'),
       'desc'    => '',
       ),
     array(
-      'id'          => 'test-ip',
-      'type'        => 'text',
-      'label'       => 'Fake IP for debug',
-      'desc'        => '',
+      'id'      => 'test-ip',
+      'type'    => 'text',
+      'label'   => __('Fake IP for debug'),
+      'desc'    => '',
       ),
     );
 
   /**
-   * @todo:
-   * echo '<input type="button" id="clear_geo_cache" class="button" value="Очистить Гео Кэш">';
+   * @todo: echo '<input type="button" id="clear_geo_cache" class="button" value="Очистить Гео Кэш">';
+   * @todo: echo '<input type="button" id="clear_geo_cache" class="button" value="Определить стандартные значения">';
    */
   WPForm::render(
     $data,
@@ -133,9 +117,24 @@ function geo_zone_render_page(){
       )
     );
 
-/**
- *  $geo_target->get_value() has inetnum, country, city, region, district, lat, lng
- */
-
   submit_button();
+
+  echo "<pre>";
+  $options = get_option(GEO_OPTION);
+
+  $check_ip = !empty($options['test-ip']) ? $options['test-ip'] : null;
+  $geo_target = new \IPGeoBase( $check_ip );
+
+  $record = $geo_target->getRecord();
+  print_r($record);
+  if( isset($record['region']) )
+    print_r( $geo_target->getCitiesByRegion( $record['region'] ) );
+
+  echo "</pre>";
+
 }
+
+function get_city(){ return get_geo_value( 'city' ); }
+function get_country(){ return get_geo_value( 'country' ); }
+function get_region(){ return get_geo_value( 'region' ); }
+function get_district(){ return get_geo_value( 'district' ); }
