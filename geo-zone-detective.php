@@ -4,7 +4,7 @@
 Plugin Name: Geo Zone Detective
 Plugin URI:
 Description: Created special for you company
-Version: 0.1a
+Version: 1.0 alpha
 Author: NikolayS93
 Author URI: https://vk.com/nikolays_93
 Author EMAIL: nikolayS93@ya.ru
@@ -30,15 +30,18 @@ class Utils
     private function __construct() {}
     private function __clone() {}
 
-    static function activate() { add_option( self::OPTION, array() ); }
     static function uninstall() { delete_option(self::OPTION); }
+    static function activate() {
+        include_once self::get_plugin_dir() . '/.install.php';
+        add_option( self::OPTION, array() );
+    }
 
     private static function include_required_classes()
     {
         $class_dir = self::get_plugin_dir('classes');
         $includes_dir = self::get_plugin_dir('includes');
         $classes = array(
-            __NAMESPACE__ . '\init'   => $class_dir . '/init.php',
+            __NAMESPACE__ . '\init'               => $class_dir . '/init.php',
             __NAMESPACE__ . '\Example_List_Table' => $includes_dir . '/wp-list-table.php',
             __NAMESPACE__ . '\WP_Admin_Page'      => $class_dir . '/wp-admin-page.php',
             __NAMESPACE__ . '\WP_Admin_Forms'     => $class_dir . '/wp-admin-forms.php',

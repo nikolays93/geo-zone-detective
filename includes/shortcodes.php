@@ -1,6 +1,7 @@
 <?php
 
 use CDevelopers\GeoZoneDetective as gz;
+// [gz_city_name]
 // [gz_select_city]
 // [gz_if_city][/gz_if_city]
 

@@ -14,124 +14,122 @@ class Init
     {
     }
 
-    public function register_files( $arrFilenames = null )
-    {
-        $bases_dir = Utils::get_plugin_dir('includes/bases');
-        $arrFilenames = (array) $arrFilenames;
-        $arrFilenames = wp_parse_args( $arrFilenames, array(
-            'CIDR' => $bases_dir . '/cidr_optim.txt',
-            'Cities' => $bases_dir . '/cities.txt',
-            ) );
-
-        $this->arrFilenames['CIDR'] = is_readable( $arrFilenames['CIDR'] )
-            ? $arrFilenames['CIDR'] : '';
-        $this->arrFilenames['Cities'] = is_readable( $arrFilenames['Cities'] )
-            ? $arrFilenames['Cities'] : '';
-    }
-
-    private static function insert_item($type, $table, $item, $filename)
+    public static function update_cities( $per_once = 10000 )
     {
         global $wpdb;
 
-        if( $type == 'Cities' ) {
-            if( ! isset($item[5]) ) {
-                echo "Строка $count файла ".basename($filename)." повреждена.";
-                return false;
-            }
+        $table = $wpdb->prefix . Utils::TABLE_CITIES;
+        $query = "INSERT INTO $table (ID, city_id, city, region, district, lat, lng) VALUES ";
 
-            return $wpdb->insert($table, array(
-                'city_id'  => $item[0],
-                'city'     => $item[1],
-                'region'   => $item[2],
-                'district' => $item[3],
-                'lat'      => $item[4],
-                'lng'      => $item[5],
-                ) );
-        }
-        else {
-            if( ! isset($item[4]) ) {
-                echo "Строка $count файла " . basename($filename) . " повреждена.";
-                return false;
-            }
-
-            return $wpdb->insert($wpdb->prefix . Utils::TABLE_RANGES, array(
-                'addr_begin' => $item[0],
-                'addr_end'   => $item[1],
-                'addr_range' => $item[2],
-                'country'    => $item[3],
-                'city_id'    => $item[4],
-                ) );
-        }
-    }
-
-    public function update_database( $type = 'Cities', $per_once = 100000 )
-    {
-        $debug = false;
-        if( ! in_array($type, array('Cities', 'CIDR')) ) {
-            return false;
-        }
-
-        global $wpdb;
-
-        $table = $wpdb->prefix;
-        $table.= ('Cities' === $type) ? Utils::TABLE_CITIES : Utils::TABLE_RANGES;
-
-        if( ! $transient = get_transient( 'update_' . $type ) ) {
-            if( ! $debug )
-                $wpdb->query("TRUNCATE TABLE $table");
+        if( ! $transient = get_transient( 'update_cities' ) ) {
+            $wpdb->query("TRUNCATE TABLE $table");
         }
 
         $args = wp_parse_args( $transient, array(
-            'count' => 0,
-            'size' => 0,
-            'result' => 0,
-            ) );
+            'count'  => 0,
+            'size'   => 0,
+        ) );
 
-        $filename = $this->arrFilenames[ $type ];
-
+        $filename = Utils::get_plugin_dir('includes/bases/cities.txt');
         if( ! is_readable($filename) ) {
-            if( $debug )
-                echo "File is not exists";
-
-            return $args;
+            echo "File is not exists";
+            return 0;
         }
 
+        $values = array();
+        $place_holders = array();
+
+        $result = 0;
         $file = file( $filename );
         foreach ($file as $count => $str) {
-            // var_dump( $count,$args['count'],$per_once  );
             if( $args['count'] && $count <= $args['count'] ) continue;
 
-            if( ! preg_match('#.#u', $str) ){
-                $str = iconv('CP1251', 'UTF-8', $str);
-            }
-
-            $item = explode("\t", trim($str));
-
-            if( ! $debug ) {
-                if( self::insert_item($type, $table, $item, $filename) ) {
-                    $args['result']++;
-                }
-            }
-            else {
-                $args['result']++;
-            }
-
+            $item = explode("\t", trim( !preg_match('#.#u', $str) ?
+                iconv('CP1251', 'UTF-8', $str) : $str ) );
             $args['count']++;
 
-            if( $args['result'] >= $per_once ) break;
+            if( !isset($item[5]) ) {
+                continue;
+            }
+
+            array_push($values, '', $item[0], $item[1], $item[2], $item[3], $item[4], $item[5]);
+            $place_holders[] = "('%d', '%d', '%s', '%s', '%s', '%s', '%s')";
+            $result++;
+
+            if( $result >= $per_once ) break;
+        }
+
+        if( $result ) {
+            $query .= implode(', ', $place_holders);
+            $wpdb->query( $wpdb->prepare("$query ", $values));
         }
 
         if( ! $args['size'] ) {
-            $args['size'] = sizeof($file);
+            $args['size'] = sizeof($file) - 1;
         }
 
-        set_transient( 'update_' . $type, array(
-            // 'file' => $filename,
-            'count' => $args['count'],
-            'size' => $args['size'] ? $args['size'] : sizeof($file),
-            ), 12 * HOUR_IN_SECONDS );
+        set_transient( 'update_cities', $args, 12 * HOUR_IN_SECONDS );
 
-        return $args;
+        return $result;
+    }
+
+    public static function update_ranges( $per_once = 10000 )
+    {
+        global $wpdb;
+
+        $table = $wpdb->prefix . Utils::TABLE_RANGES;
+        $query = "INSERT INTO $table (ID, addr_begin, addr_end, addr_range, country, city_id) VALUES ";
+
+        if( ! $transient = get_transient( 'update_ranges' ) ) {
+            $wpdb->query("TRUNCATE TABLE $table");
+        }
+
+        $args = wp_parse_args( $transient, array(
+            'count'  => 0,
+            'size'   => 0,
+        ) );
+
+        $filename = Utils::get_plugin_dir('includes/bases/cidr_optim.txt');
+        if( ! is_readable($filename) ) {
+            echo "File is not exists";
+            return 0;
+        }
+
+        $values = array();
+        $place_holders = array();
+
+        $result = 0;
+        $file = file( $filename );
+        foreach ($file as $count => $str) {
+            if( $args['count'] && $count <= $args['count'] ) continue;
+
+            $item = explode("\t", trim( !preg_match('#.#u', $str) ?
+                iconv('CP1251', 'UTF-8', $str) : $str ) );
+            $args['count']++;
+
+            if( !isset($item[4]) ) {
+                continue;
+            }
+
+            array_push($values, '', $item[0], $item[1], $item[2], $item[3], $item[4]);
+            $place_holders[] = "('%d', '%d', '%d', '%s', '%s', '%d')";
+            $result++;
+
+            if( $result >= $per_once ) break;
+        }
+
+        if( $result ) {
+            $query .= implode(', ', $place_holders);
+            $wpdb->query( $wpdb->prepare("$query ", $values));
+        }
+
+        if( ! $args['size'] ) {
+            $args['size'] = sizeof($file) - 1;
+        }
+
+        set_transient( 'update_ranges', $args, 12 * HOUR_IN_SECONDS );
+
+        return $result;
     }
 
     public function get_cities_count()
@@ -154,28 +152,6 @@ class Init
         $num = $wpdb->get_var($count_query);
 
         return $num;
-    }
-
-    public static function get_range_item( $ip )
-    {
-        if( ! self::is_valid_ip($ip) ) return false;
-
-        global $wpdb;
-
-        $ip = sprintf('%u', ip2long($ip) );
-
-        $table = $wpdb->prefix . Utils::TABLE_RANGES;
-        $query = "
-        SELECT * FROM $table
-        WHERE `addr_begin` < $ip
-        AND `addr_end` > $ip
-        LIMIT 1";
-
-        $result = $wpdb->get_results($query);
-        if( is_array($result) )
-            $result = current($result);
-
-        return $result;
     }
 
     public static function get_city_item( $args )

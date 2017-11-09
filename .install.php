@@ -18,10 +18,11 @@ $ranges = "CREATE TABLE $table (
     addr_end   int(18) unsigned NULL,
     addr_range   text NULL,
     country text NULL,
-    city_id  text NULL,
+    city_id  int(18) NULL,
     PRIMARY KEY (ID),
     KEY addr_begin (addr_begin),
-    KEY addr_end (addr_end)
+    KEY addr_end (addr_end),
+    KEY city_id (city_id)
 ) {$charset_collate};";
 dbDelta( $ranges );
 

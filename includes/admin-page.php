@@ -21,62 +21,75 @@ class Admin_Page
             'columns'     => 1,
             ) );
 
-        session_start();
         if( current_user_can( 'manage_options' ) ) {
-            if( ! empty($_GET['update_cities']) ) {
-                // Update cities
-                $gz = new GeoZoneDetective();
-                $gz->register_files();
-                $updated = $gz->update_database( 'Cities' );
-
-                if( $updated['result'] ) {
-                    $_SESSION['gz_notice_message'] = (object) array(
-                            'status' => 'success',
-                            'message' => sprintf( __( '%d cities updated. (Summary: %d at %d)', DOMAIN),
-                                $updated['result'], $updated['count'], $updated['size'] ),
-                            );
-                }
-                else {
-                    $_SESSION['gz_notice_message'] = (object) array(
-                        'message' => __('Cities not updated.', DOMAIN),
-                        'status' => 'error',
-                        );
-                }
-
-                wp_redirect( 'http://wordpress.cms' . remove_query_arg('update_cities') );
-                exit;
+            if( !isset($_SESSION) ) {
+                session_start();
             }
 
-            if( ! empty($_GET['update_cidr']) ) {
-                // Update cities
-                $gz = new GeoZoneDetective();
-                $gz->register_files();
-                $updated = $gz->update_database( 'CIDR' );
-
-                if( $updated['result'] ) {
+            if( ! empty($_GET['update_cities']) ) {
+                if( ($t = get_transient( 'update_cities' )) && $t['count'] == $t['size'] ) {
                     $_SESSION['gz_notice_message'] = (object) array(
-                        'status' => 'success',
-                        'message' => sprintf( __( '%d ranges updated. (Summary: %d at %d)', DOMAIN),
-                            $updated['result'], $updated['count'], $updated['size'] ),
-                        );
+                        'message' => __('Cities allready updated.', DOMAIN),
+                        'status' => 'info',
+                    );
                 }
                 else {
-                    if( $updated['count'] == $updated['size'] ) {
+                    $updated = Init::update_cities(25000);
+                    $updated+= Init::update_cities(25000);
+                    $updated+= Init::update_cities(25000);
+                    $updated+= Init::update_cities(25000);
+
+                    if( $updated ) {
+                        $t = get_transient( 'update_cities' );
                         $_SESSION['gz_notice_message'] = (object) array(
                             'status' => 'success',
-                            'message' => sprintf( __( 'Ranges was allready updated. (Summary count: %d)', DOMAIN),
-                                $updated['result'], $updated['count'], $updated['size'] ),
-                            );
-                    }
-
-                    $_SESSION['gz_notice_message'] = (object) array(
-                        'message' => __('Ranges not updated.', DOMAIN),
-                        'status' => 'error',
+                            'message' => sprintf( __( '%d cities updated. (Summary: %d at %d)', DOMAIN),
+                                $updated, $t['count'], $t['size'] ),
                         );
+                    }
+                    else {
+                        $_SESSION['gz_notice_message'] = (object) array(
+                            'message' => __('Cities not updated.', DOMAIN),
+                            'status' => 'error',
+                        );
+                    }
                 }
 
-                wp_redirect( 'http://wordpress.cms' . remove_query_arg('update_cidr') );
-                exit;
+                // wp_redirect( 'http://wordpress.cms' . remove_query_arg('update_cities') );
+                // exit;
+            }
+
+            if( ! empty($_GET['update_ranges']) ) {
+                if( ($t = get_transient( 'update_ranges' )) && $t['count'] == $t['size'] ) {
+                    $_SESSION['gz_notice_message'] = (object) array(
+                        'message' => __('Ranges allready updated.', DOMAIN),
+                        'status' => 'info',
+                    );
+                }
+                else {
+                    $updated = Init::update_ranges(25000);
+                    $updated+= Init::update_ranges(25000);
+                    $updated+= Init::update_ranges(25000);
+                    $updated+= Init::update_ranges(25000);
+
+                    if( $updated ) {
+                        $t = get_transient( 'update_ranges' );
+                        $_SESSION['gz_notice_message'] = (object) array(
+                            'status' => 'success',
+                            'message' => sprintf( __( '%d ranges updated. (Summary: %d at %d)', DOMAIN),
+                                $updated, $t['count'], $t['size'] ),
+                        );
+                    }
+                    else {
+                        $_SESSION['gz_notice_message'] = (object) array(
+                            'message' => __('Ranges not updated.', DOMAIN),
+                            'status' => 'error',
+                        );
+                    }
+                }
+
+                // wp_redirect( 'http://wordpress.cms' . remove_query_arg('update_ranges') );
+                // exit;
             }
 
             if( ! empty($_SESSION['gz_notice_message']) ) {
@@ -154,21 +167,21 @@ class Admin_Page
             ) );
         echo $form->render();
 
-        // $ip = GeoZoneDetective::get_current_ip();
+        // $ip = Init::get_current_ip();
         $ip = '94.181.95.199';
-        // $range_item = GeoZoneDetective::get_range_item( $ip );
+        // $range_item = Init::get_range_item( $ip );
         // var_dump($range_item);
         // if( isset($range_item->city_id) ) {
         //     echo "<hr>";
-        //     $city_item  = GeoZoneDetective::get_city_item( $range_item->city_id );
+        //     $city_item  = Init::get_city_item( $range_item->city_id );
         //     var_dump($city_item);
         // }
-        var_dump( GeoZoneDetective::get_geo_object($ip) );
-        echo "<hr>";
-        $cities = GeoZoneDetective::get_all_cities(null, null);
-        foreach ($cities as $objCity) {
-            echo "$objCity->city <br>";
-        }
+        // var_dump( Init::get_geo_object($ip) );
+        // echo "<hr>";
+        // $cities = Init::get_all_cities(null, null);
+        // foreach ($cities as $objCity) {
+        //     echo "$objCity->city <br>";
+        // }
 
         submit_button( 'Сохранить', 'primary', 'save_changes' );
     }
