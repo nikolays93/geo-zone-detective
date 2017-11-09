@@ -151,7 +151,59 @@ class Admin_Page
             ),
         );
 
-        global $wp;
+        $cities = init::get_all_cities();
+        ?>
+        <style>
+            fieldset {
+                float: left;
+                box-sizing: border-box;
+                width: 33%;
+                min-width: 330px;
+                border: 1px solid #ccc;
+                padding: 4px 6px;
+                height: 200px;
+                overflow: auto;
+                margin-bottom: 10px;
+            }
+            fieldset legend {
+                margin-left: auto;
+                padding: 0px 15px;
+            }
+            .half {
+                box-sizing: border-box;
+                float: left;
+                width: 50%;
+                min-height: 1px;
+            }
+        </style>
+        <fieldset class="city_select">
+            <legend>Основные города</legend>
+            <div class='half list'>
+            <?php
+            foreach ($cities as $city) {
+                echo sprintf( '<label for="%1$s[%2$d]"><input type="checkbox" name="%1$s[%2$d]" id="%1$s[%2$d]"> %3$s <br> </label>',
+                    Utils::OPTION, $city->city_id, $city->city );
+            }
+            ?>
+            </div>
+            <div class='half activated'></div>
+        </fieldset>
+        <script>
+            (function($) {
+                $('.city_select label input').on('click', function(event) {
+                    var element = $(this).parent();
+
+                    if( element.find('input').is(':checked') ) {
+                        element.clone(1).appendTo( $(this).closest('.city_select').find('.activated') );
+                    }
+                    else {
+                        element.clone(1).appendTo( $(this).closest('.city_select').find('.list') );
+                    }
+                    element.remove();
+                });
+            })(jQuery);
+        </script>
+        <?php
         $data = array(
             // array(
             //     'id'      => 'active_cities',
