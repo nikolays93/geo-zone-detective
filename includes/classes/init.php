@@ -1,9 +1,6 @@
 <?php
 namespace CDevelopers\GeoZoneDetective;
 
-if( ! defined('GEO_LISTS_DIR') )
-	define('GEO_LISTS_DIR', dirname(__FILE__) . '/geo_files/');
-
 /**  */
 class Init
 {
