@@ -55,8 +55,8 @@ class Admin_Page
                     }
                 }
 
-                // wp_redirect( 'http://wordpress.cms' . remove_query_arg('update_cities') );
-                // exit;
+                wp_redirect( 'http://wordpress.cms' . remove_query_arg('update_cities') );
+                exit;
             }
 
             if( ! empty($_GET['update_ranges']) ) {
@@ -88,8 +88,8 @@ class Admin_Page
                     }
                 }
 
-                // wp_redirect( 'http://wordpress.cms' . remove_query_arg('update_ranges') );
-                // exit;
+                wp_redirect( 'http://wordpress.cms' . remove_query_arg('update_ranges') );
+                exit;
             }
 
             if( ! empty($_SESSION['gz_notice_message']) ) {
@@ -157,15 +157,29 @@ class Admin_Page
                 ),
             );
 
-        // $form = new WP_Admin_Forms( $data, $is_table = true, $args = array(
+        global $wp;
+        $data = array(
+            array(
+                'id'      => 'update_cities',
+                'type'    => 'html',
+                'value'    =>
+                    sprintf('<a href="%s" class="button button-primary">%s</a> ',
+                        add_query_arg( array('update_cities' => '1') ),
+                        __( 'Update cities', DOMAIN ) ) .
+                    sprintf('<a href="%s" class="button button-primary">%s</a> ',
+                        add_query_arg( array('update_ranges' => '1') ),
+                        __( 'Update ranges', DOMAIN ) )
+                ),
+            );
+        $form = new WP_Admin_Forms( $data, $is_table = true, $args = array(
             // Defaults:
             // 'admin_page'  => true,
             // 'item_wrap'   => array('<p>', '</p>'),
             // 'form_wrap'   => array('', ''),
             // 'label_tag'   => 'th',
             // 'hide_desc'   => false,
-            // ) );
-        // echo $form->render();
+            ) );
+        echo $form->render();
 
         submit_button( 'Сохранить', 'primary', 'save_changes' );
     }
