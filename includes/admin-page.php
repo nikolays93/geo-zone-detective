@@ -157,31 +157,15 @@ class Admin_Page
                 ),
             );
 
-        $form = new WP_Admin_Forms( $data, $is_table = true, $args = array(
+        // $form = new WP_Admin_Forms( $data, $is_table = true, $args = array(
             // Defaults:
             // 'admin_page'  => true,
             // 'item_wrap'   => array('<p>', '</p>'),
             // 'form_wrap'   => array('', ''),
             // 'label_tag'   => 'th',
             // 'hide_desc'   => false,
-            ) );
-        echo $form->render();
-
-        // $ip = Init::get_current_ip();
-        $ip = '94.181.95.199';
-        // $range_item = Init::get_range_item( $ip );
-        // var_dump($range_item);
-        // if( isset($range_item->city_id) ) {
-        //     echo "<hr>";
-        //     $city_item  = Init::get_city_item( $range_item->city_id );
-        //     var_dump($city_item);
-        // }
-        // var_dump( Init::get_geo_object($ip) );
-        // echo "<hr>";
-        // $cities = Init::get_all_cities(null, null);
-        // foreach ($cities as $objCity) {
-        //     echo "$objCity->city <br>";
-        // }
+            // ) );
+        // echo $form->render();
 
         submit_button( 'Сохранить', 'primary', 'save_changes' );
     }

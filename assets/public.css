@@ -7,6 +7,9 @@
 .city-select-wrap fieldset {
     border: 1px solid #ccc;
     border-radius: 4px;
+    background: #fff;
+    font-size: 14px;
+    line-height: 1.1;
 }
 .city-select-wrap fieldset > legend {
     margin: 0 10px;

@@ -39,7 +39,12 @@ function gz_get_city_name( $atts = array(), $content = '' ) {
 }
 
 add_shortcode( 'gz_select_city', 'gz_get_select_city' );
-function gz_get_select_city() {
+function gz_get_select_city( $atts = array(), $content = '' ) {
+    $atts = shortcode_atts( array(
+        'before' => 'value',
+        'after'  => '',
+        ), $atts );
+
     $url = gz\Utils::get_plugin_url('assets');
     wp_enqueue_script( 'gz-city-select', $url . '/public.js', array('jquery'), '1.0', true );
     wp_localize_script( 'gz-city-select', 'gz', array(
@@ -68,7 +73,7 @@ function gz_get_select_city() {
     ob_start();
     ?>
     <div class="gz-current-city-wrap">
-        <a href="#"><?php echo gz_get_city_name(); ?></a>
+        <?php echo $atts['before']; ?><a href="#"><?php echo gz_get_city_name(); ?></a><?php echo $atts['after']; ?>
         <div class="city-select-wrap hidden">
             <fieldset>
                 <legend>Выберите город</legend>
@@ -140,6 +145,6 @@ function gz_ajax_cities_name_list()
 
 function gq_style_enqueue() {
     $url = gz\Utils::get_plugin_url('assets');
-    wp_enqueue_style( 'gz-city-select-style', $url . '/public.js', $deps = null, $ver = '1.0' );
+    wp_enqueue_style( 'gz-city-select-style', $url . '/public.css', $deps = null, $ver = '1.0' );
 }
 add_action( 'wp_enqueue_scripts', 'gq_style_enqueue' );
