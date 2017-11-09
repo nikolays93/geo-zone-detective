@@ -39,13 +39,10 @@ class Utils
     private static function include_required_classes()
     {
         $class_dir = self::get_plugin_dir('classes');
-        $includes_dir = self::get_plugin_dir('includes');
         $classes = array(
             __NAMESPACE__ . '\init'               => $class_dir . '/init.php',
-            __NAMESPACE__ . '\Example_List_Table' => $includes_dir . '/wp-list-table.php',
             __NAMESPACE__ . '\WP_Admin_Page'      => $class_dir . '/wp-admin-page.php',
             __NAMESPACE__ . '\WP_Admin_Forms'     => $class_dir . '/wp-admin-forms.php',
-            __NAMESPACE__ . '\WP_Post_Boxes'      => $class_dir . '/wp-post-boxes.php',
             );
 
         foreach ($classes as $classname => $path) {
@@ -55,7 +52,6 @@ class Utils
         }
 
         // includes
-        // require_once __DIR__ . '/includes/register-post_type.php';
         require_once __DIR__ . '/includes/shortcodes.php';
         require_once __DIR__ . '/includes/admin-page.php';
     }

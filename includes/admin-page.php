@@ -97,12 +97,6 @@ class Admin_Page
                 unset($_SESSION['gz_notice_message']);
             }
         }
-
-        // $page->set_assets( array($this, '_assets') );
-
-        // $page->add_metabox( 'metabox1', 'metabox1', array($this, 'metabox1_callback'), $position = 'side');
-        // $page->add_metabox( 'metabox2', 'metabox2', array($this, 'metabox2_callback'), $position = 'side');
-        // $page->set_metaboxes();
     }
 
     function _assets()
@@ -124,53 +118,58 @@ class Admin_Page
                 'type'    => 'text',
                 'label'   => __('Charset', DOMAIN),
                 'desc'    => '',
-                ),
+            ),
             array(
                 'id'      => 'country',
                 'type'    => 'text',
                 'label'   => __('Default Country', DOMAIN),
                 'desc'    => '',
-                ),
+            ),
             array(
                 'id'      => 'city',
                 'type'    => 'text',
                 'label'   => __('Default City', DOMAIN),
                 'desc'    => '',
-                ),
+            ),
             array(
                 'id'      => 'region',
                 'type'    => 'text',
                 'label'   => __('Default Region', DOMAIN),
                 'desc'    => '',
-                ),
+            ),
             array(
                 'id'      => 'district',
                 'type'    => 'text',
                 'label'   => __('Default District', DOMAIN),
                 'desc'    => '',
-                ),
+            ),
             array(
                 'id'      => 'test-ip',
                 'type'    => 'text',
                 'label'   => __('Fake IP for debug', DOMAIN),
                 'desc'    => '',
-                ),
-            );
+            ),
+        );
 
         global $wp;
         $data = array(
+            // array(
+            //     'id'      => 'active_cities',
+            //     'type'    => 'html',
+            //     'value'   => '',
+            // ),
             array(
                 'id'      => 'update_cities',
                 'type'    => 'html',
                 'value'    =>
-                    sprintf('<a href="%s" class="button button-primary">%s</a> ',
-                        add_query_arg( array('update_cities' => '1') ),
-                        __( 'Update cities', DOMAIN ) ) .
-                    sprintf('<a href="%s" class="button button-primary">%s</a> ',
-                        add_query_arg( array('update_ranges' => '1') ),
-                        __( 'Update ranges', DOMAIN ) )
-                ),
-            );
+                sprintf('<a href="%s" class="button button-primary">%s</a> ',
+                    add_query_arg( array('update_cities' => '1') ),
+                    __( 'Update cities', DOMAIN ) ) .
+                sprintf('<a href="%s" class="button button-primary">%s</a> ',
+                    add_query_arg( array('update_ranges' => '1') ),
+                    __( 'Update ranges', DOMAIN ) )
+            ),
+        );
         $form = new WP_Admin_Forms( $data, $is_table = true, $args = array(
             // Defaults:
             // 'admin_page'  => true,
@@ -178,7 +177,7 @@ class Admin_Page
             // 'form_wrap'   => array('', ''),
             // 'label_tag'   => 'th',
             // 'hide_desc'   => false,
-            ) );
+        ) );
         echo $form->render();
 
         submit_button( 'Сохранить', 'primary', 'save_changes' );
